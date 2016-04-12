@@ -136,8 +136,8 @@
 // However, this pattern of serving HTTPS with demand-loaded TLS certificates
 // comes up enough to wrap into a single method m.ServeHTTPS.
 //
-// Similarly, many HTTPS servers prefer to redirect HTTP clients to the HTTPS URLs,
-// That functionality is provided by m.ServeHTTP and at a lower level by m.RedirectHTTP.
+// Similarly, many HTTPS servers prefer to redirect HTTP clients to the HTTPS URLs.
+// That functionality is provided by RedirectHTTP.
 //
 // The combination of serving HTTPS with demand-loaded TLS certificates and
 // serving HTTPS redirects to HTTP clients is provided by m.Serve, as used in
@@ -188,7 +188,7 @@ type Manager struct {
 	watchChan    chan struct{}
 }
 
-// Serve runs an HTTP/HTTPS web server using TLS certificates obtains by the manager.
+// Serve runs an HTTP/HTTPS web server using TLS certificates obtained by the manager.
 // The HTTP server redirects all requests to the HTTPS server.
 // The HTTPS server obtains TLS certificates as needed and responds to requests
 // by invoking http.DefaultServeMux.
@@ -201,8 +201,17 @@ func (m *Manager) Serve() error {
 		return err
 	}
 	defer l.Close()
-	go http.Serve(l, http.HandlerFunc(m.RedirectHTTP))
+	go http.Serve(l, http.HandlerFunc(RedirectHTTP))
 
+	return m.ServeHTTPS()
+}
+
+// ServeHTTPS runs an HTTPS web server using TLS certificates obtained by the manager.
+// The HTTPS server obtains TLS certificates as needed and responds to requests
+// by invoking http.DefaultServeMux.
+// ServeHTTPS does not return unitil the HTTPS server fails to start or else stops.
+// Either way, ServeHTTPS can only return a non-nil error, never nil.
+func (m *Manager) ServeHTTPS() error {
 	srv := &http.Server{
 		Addr: ":https",
 		TLSConfig: &tls.Config{
@@ -212,7 +221,10 @@ func (m *Manager) Serve() error {
 	return srv.ListenAndServeTLS("", "")
 }
 
-func (m *Manager) RedirectHTTP(w http.ResponseWriter, r *http.Request) {
+// RedirectHTTP is an HTTP handler (suitable for use with http.HandleFunc)
+// that responds to all requests by redirecting to the same URL served over HTTPS.
+// It should only be invoked for requests received over HTTP.
+func RedirectHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.TLS != nil || r.Host == "" {
 		http.Error(w, "not found", 404)
 	}
