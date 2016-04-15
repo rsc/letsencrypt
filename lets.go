@@ -318,6 +318,16 @@ func (m *Manager) updated() {
 	}
 }
 
+func (m *Manager) updateStateCert(name string, ec stateCert) {
+	m.mu.Lock()
+	if m.state.Certs == nil {
+		m.state.Certs = make(map[string]stateCert)
+	}
+	m.state.Certs[name] = ec
+	m.mu.Unlock()
+	m.updated()
+}
+
 func (m *Manager) CacheFile(name string) error {
 	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
@@ -598,14 +608,14 @@ func (e *cacheEntry) init() {
 		return
 	}
 
-	cert, refreshTime, err := e.m.verify(e.host)
+	entryCert, cert, refreshTime, err := e.m.verify(e.host)
 	e.m.mu.Lock()
 	e.m.certCache[e.host] = e
 	e.m.mu.Unlock()
-	e.install(cert, refreshTime, err)
+	e.install(entryCert, cert, refreshTime, err)
 }
 
-func (e *cacheEntry) install(cert *tls.Certificate, refreshTime time.Time, err error) {
+func (e *cacheEntry) install(ec stateCert, cert *tls.Certificate, refreshTime time.Time, err error) {
 	e.cert = nil
 	e.timeout = time.Time{}
 	e.err = nil
@@ -618,21 +628,22 @@ func (e *cacheEntry) install(cert *tls.Certificate, refreshTime time.Time, err e
 
 	e.cert = cert
 	e.timeout = refreshTime
+	e.m.updateStateCert(e.host, ec)
 }
 
 func (e *cacheEntry) refresh() {
 	e.m.rateLimit.Wait(context.Background())
-	cert, refreshTime, err := e.m.verify(e.host)
+	entryCert, cert, refreshTime, err := e.m.verify(e.host)
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.refreshing = false
 	if err == nil {
-		e.install(cert, refreshTime, nil)
+		e.install(entryCert, cert, refreshTime, nil)
 	}
 }
 
-func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.Time, err error) {
+func (m *Manager) verify(host string) (ec stateCert, cert *tls.Certificate, refreshTime time.Time, err error) {
 	c, err := acme.NewClient(letsEncryptURL, &m.state, acme.EC256)
 	if err != nil {
 		return
@@ -666,7 +677,7 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 		return
 	}
 
-	return cert, refreshTime, nil
+	return entryCert, cert, refreshTime, nil
 }
 
 func certRefreshTime(cert *tls.Certificate) (time.Time, error) {
