@@ -666,6 +666,10 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 		return
 	}
 
+	m.mu.Lock()
+	m.state.Certs[host] = entryCert
+	m.mu.Unlock()
+
 	return cert, refreshTime, nil
 }
 
