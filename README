@@ -16,6 +16,7 @@ certificates in a file letsencrypt.cache across server restarts.
     package main
 
     import (
+    	"fmt"
     	"log"
     	"net/http"
     	"rsc.io/letsencrypt"
@@ -24,7 +25,7 @@ certificates in a file letsencrypt.cache across server restarts.
     func main() {
     	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     		fmt.Fprintf(w, "Hello, TLS!\n")
-    	}
+    	})
     	var m letsencrypt.Manager
     	if err := m.CacheFile("letsencrypt.cache"); err != nil {
     		log.Fatal(err)
@@ -141,11 +142,11 @@ However, this pattern of serving HTTPS with demand-loaded TLS certificates
 comes up enough to wrap into a single method m.ServeHTTPS.
 
 Similarly, many HTTPS servers prefer to redirect HTTP clients to the HTTPS
-URLs, That functionality is provided by m.ServeHTTP and at a lower level by
-m.RedirectHTTP.
+URLs. That functionality is provided by RedirectHTTP.
 
 The combination of serving HTTPS with demand-loaded TLS certificates and
 serving HTTPS redirects to HTTP clients is provided by m.Serve, as used in
 the original example above.
 
+func RedirectHTTP(w http.ResponseWriter, r *http.Request)
 type Manager struct { ... }

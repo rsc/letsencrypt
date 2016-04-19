@@ -17,6 +17,7 @@
 //	package main
 //
 //	import (
+//		"fmt"
 //		"log"
 //		"net/http"
 //		"rsc.io/letsencrypt"
@@ -25,7 +26,7 @@
 //	func main() {
 //		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //			fmt.Fprintf(w, "Hello, TLS!\n")
-//		}
+//		})
 //		var m letsencrypt.Manager
 //		if err := m.CacheFile("letsencrypt.cache"); err != nil {
 //			log.Fatal(err)
@@ -669,6 +670,7 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 	m.mu.Lock()
 	m.state.Certs[host] = entryCert
 	m.mu.Unlock()
+	m.updated()
 
 	return cert, refreshTime, nil
 }
