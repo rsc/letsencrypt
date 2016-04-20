@@ -172,7 +172,7 @@ import (
 )
 
 const letsEncryptURL = "https://acme-v01.api.letsencrypt.org/directory"
-const debug = true
+const debug = false
 
 // A Manager m takes care of obtaining and refreshing a collection of TLS certificates
 // obtained by LetsEncrypt.org.
