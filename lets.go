@@ -668,6 +668,9 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 	}
 
 	m.mu.Lock()
+	if m.state.Certs == nil {
+		m.state.Certs = make(map[string]stateCert)
+	}
 	m.state.Certs[host] = entryCert
 	m.mu.Unlock()
 	m.updated()
