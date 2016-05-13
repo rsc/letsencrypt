@@ -151,13 +151,16 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -508,6 +511,10 @@ func (m *Manager) GetCertificate(clientHello *tls.ClientHelloInfo) (*tls.Certifi
 		return cert, nil
 	}
 
+	if host == "" {
+		host = localhost
+	}
+
 	return m.Cert(host)
 }
 
@@ -551,19 +558,29 @@ func (m *Manager) Cert(host string) (*tls.Certificate, error) {
 	// Otherwise look in our cert cache.
 	entry, ok := m.certCache[host]
 	if !ok {
-		r := m.rateLimit.Reserve()
-		ok := r.OK()
-		if ok {
-			ok = m.newHostLimit.Allow()
-			if !ok {
-				r.Cancel()
+		if host == localhost {
+			c, err := m.certSelfSigned()
+			if err != nil {
+				return nil, err
 			}
+
+			entry = &cacheEntry{host: host, m: m, cert: c}
+		} else {
+			r := m.rateLimit.Reserve()
+			ok := r.OK()
+			if ok {
+				ok = m.newHostLimit.Allow()
+				if !ok {
+					r.Cancel()
+				}
+			}
+			if !ok {
+				m.mu.Unlock()
+				return nil, fmt.Errorf("rate limited")
+			}
+			entry = &cacheEntry{host: host, m: m}
 		}
-		if !ok {
-			m.mu.Unlock()
-			return nil, fmt.Errorf("rate limited")
-		}
-		entry = &cacheEntry{host: host, m: m}
+
 		m.certCache[host] = entry
 	}
 	m.mu.Unlock()
@@ -574,7 +591,60 @@ func (m *Manager) Cert(host string) (*tls.Certificate, error) {
 	if entry.err != nil {
 		return nil, entry.err
 	}
+
 	return entry.cert, nil
+}
+
+const localhost = "localhost"
+
+func (m *Manager) certSelfSigned() (*tls.Certificate, error) {
+	priv, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		return nil, err
+	}
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate serial number: %s", err)
+	}
+
+	template := &x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().AddDate(0, 1, 0),
+
+		DNSNames: []string{"localhost"},
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	cert, err := x509.CreateCertificate(rand.Reader, template, template, &priv.PublicKey, priv)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.state.Certs == nil {
+		m.state.Certs = make(map[string]stateCert)
+	}
+
+	m.state.Certs[localhost] = stateCert{
+		Cert: encodePEM(cert),
+		Key:  encodePEM(priv),
+	}
+
+	m.updated()
+
+	return &tls.Certificate{
+		Certificate: [][]byte{cert},
+		PrivateKey:  priv,
+	}, nil
 }
 
 func (e *cacheEntry) init() {
@@ -651,6 +721,7 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 		err = fmt.Errorf("%v", errmap)
 		return
 	}
+
 	entryCert := stateCert{
 		Cert: string(acmeCert.Certificate),
 		Key:  string(acmeCert.PrivateKey),
@@ -750,4 +821,21 @@ func unmarshalKey(text string) (*ecdsa.PrivateKey, error) {
 
 func newKey() (*ecdsa.PrivateKey, error) {
 	return ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+}
+
+func encodePEM(data interface{}) string {
+	b := &pem.Block{}
+	switch key := data.(type) {
+	case *ecdsa.PrivateKey:
+		b.Type = "EC PRIVATE KEY"
+		b.Bytes, _ = x509.MarshalECPrivateKey(key)
+	case *rsa.PrivateKey:
+		b.Type = "RSA PRIVATE KEY"
+		b.Bytes = x509.MarshalPKCS1PrivateKey(key)
+	case []byte:
+		b.Type = "CERTIFICATE"
+		b.Bytes = data.([]byte)
+	}
+
+	return string(pem.EncodeToMemory(b))
 }
