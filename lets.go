@@ -228,6 +228,7 @@ func (m *Manager) ServeHTTPS() error {
 func RedirectHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.TLS != nil || r.Host == "" {
 		http.Error(w, "not found", 404)
+		return
 	}
 
 	u := r.URL
