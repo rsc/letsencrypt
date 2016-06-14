@@ -156,11 +156,13 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -336,7 +338,7 @@ func (m *Manager) CacheFile(name string) error {
 	}
 	go func() {
 		for range m.Watch() {
-			err := ioutil.WriteFile(name, []byte(m.Marshal()), 0600)
+			err := writeFile(name, []byte(m.Marshal()))
 			if err != nil {
 				log.Printf("writing letsencrypt cache: %v", err)
 			}
@@ -750,4 +752,24 @@ func unmarshalKey(text string) (*ecdsa.PrivateKey, error) {
 
 func newKey() (*ecdsa.PrivateKey, error) {
 	return ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+}
+
+// writeFile atomically updates content of the file
+func writeFile(filename string, data []byte) error {
+	f, err := ioutil.TempFile(filepath.Dir(filename), ".dump-")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+	switch n, err := f.Write(data); {
+	case err != nil:
+		return err
+	case err == nil && n < len(data):
+		return io.ErrShortWrite
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Rename(f.Name(), filename)
 }
