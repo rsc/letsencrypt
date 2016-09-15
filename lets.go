@@ -171,8 +171,44 @@ import (
 	"github.com/xenolf/lego/acme"
 )
 
-const letsEncryptURL = "https://acme-v01.api.letsencrypt.org/directory"
-const debug = false
+
+
+const letsEncryptURL_ = "https://acme-v01.api.letsencrypt.org/directory"
+const letsEncryptStagingURL_ = "https://acme-staging.api.letsencrypt.org/directory"
+
+var (
+ 	letsEncryptURL string = letsEncryptURL_
+ 	debug bool = false
+)
+
+
+// Debug en-/disables debugging.
+func Debug(on bool) {
+	if on {
+		debug = true
+	} else {
+		debug = false
+	}
+}
+
+// Staging en-/diables the letsencrypt staging environment.
+// Letsencrypt highly recommends testing against the staging environment
+// before using the production environment.
+// This will allow to get things right before issuing trusted certificates
+// and reduce the chance of running up against rate limits.
+//
+// The staging environment uses the same rate limits as the production environment
+// with the following exceptions:
+//
+// The Certificates per Registered Domain limit is 30,000 per week.
+// The Duplicate Certificate limit is 30,000 per week.
+func Staging(on bool) {
+	if on {
+		letsEncryptURL = letsEncryptStagingURL_
+	} else {
+		letsEncryptURL = letsEncryptURL_
+	}
+}
 
 // A Manager m takes care of obtaining and refreshing a collection of TLS certificates
 // obtained by LetsEncrypt.org.
