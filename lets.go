@@ -194,7 +194,7 @@ type Manager struct {
 // The HTTPS server obtains TLS certificates as needed and responds to requests
 // by invoking http.DefaultServeMux.
 //
-// Serve does not return unitil the HTTPS server fails to start or else stops.
+// Serve does not return until the HTTPS server fails to start or else stops.
 // Either way, Serve can only return a non-nil error, never nil.
 func (m *Manager) Serve() error {
 	l, err := net.Listen("tcp", ":http")
