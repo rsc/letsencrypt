@@ -428,7 +428,9 @@ func (m *Manager) register(email string, prompt func(string) bool) error {
 // Consequently, the state should be kept private.
 func (m *Manager) Marshal() string {
 	m.init()
+	m.mu.Lock()
 	js, err := json.MarshalIndent(&m.state, "", "\t")
+	m.mu.Unlock()
 	if err != nil {
 		panic("unexpected json.Marshal failure")
 	}
@@ -450,7 +452,9 @@ func (m *Manager) Unmarshal(enc string) error {
 		}
 		st.key = key
 	}
+	m.mu.Lock()
 	m.state = st
+	m.mu.Unlock()
 	for host, cert := range m.state.Certs {
 		c, err := cert.toTLS()
 		if err != nil {
