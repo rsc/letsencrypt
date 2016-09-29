@@ -8,7 +8,7 @@
 // that can prove control over the given domain's DNS records or
 // the servers pointed at by those records.
 //
-// Warning!
+// Warning
 //
 // Like any other random code you find on the internet, this package should
 // not be relied upon in important, production systems without thorough testing
