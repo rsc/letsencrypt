@@ -3,10 +3,10 @@
 	"ignore": "",
 	"package": [
 		{
-			"checksumSHA1": "CHmdoMriAboKW2nHYSXo0yBizaE=",
+			"checksumSHA1": "enRxG6E7XiaJEEqew+FrHtJ4Igw=",
 			"path": "github.com/xenolf/lego/acme",
-			"revision": "ca19a90028e242e878585941c2a27c8f3b3efc25",
-			"revisionTime": "2016-03-28T16:28:34Z"
+			"revision": "a9d8cec0e6563575e5868a005359ac97911b5985",
+			"revisionTime": "2016-06-13T23:31:55Z"
 		},
 		{
 			"checksumSHA1": "jrheBzltbBE1frmNXQiu911T7dE=",
