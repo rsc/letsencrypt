@@ -499,7 +499,11 @@ func (m *Manager) Unmarshal(enc string) error {
 func (m *Manager) SetHosts(hosts []string) {
 	m.init()
 	m.mu.Lock()
-	m.state.Hosts = append(m.state.Hosts[:0], hosts...)
+	if len(hosts) > 0 {
+		m.state.Hosts = append(m.state.Hosts[:0], hosts...)
+	} else {
+		m.state.Hosts = nil
+	}
 	m.mu.Unlock()
 	m.updated()
 }
