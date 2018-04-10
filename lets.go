@@ -168,7 +168,7 @@
 // serving HTTPS redirects to HTTP clients is provided by m.Serve, as used in
 // the original example above.
 //
-package letsencrypt
+package letsencrypt // import "rsc.io/letsencrypt"
 
 import (
 	"crypto"
