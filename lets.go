@@ -688,7 +688,6 @@ func (m *Manager) verify(host string) (cert *tls.Certificate, refreshTime time.T
 		if debug {
 			log.Printf("ObtainCertificate %v toTLS failure: %v", host, err)
 		}
-		err = err
 		return
 	}
 	if refreshTime, err = certRefreshTime(cert); err != nil {
