@@ -1,0 +1,12 @@
+github.com/miekg/dns v0.0.0-20170604123008-e78414ef7560 h1:puF68QYl1/TNKGiSvYIpRJ0UotPzthEPgdCdJEEtp1o=
+github.com/miekg/dns v0.0.0-20170604123008-e78414ef7560/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
+github.com/xenolf/lego v0.0.0-20170618175828-28ead50ff1ca h1:lfJIlRDKcyQ6/n/l2EKAwkVfA5d2L03sqFQeGslQTyA=
+github.com/xenolf/lego v0.0.0-20170618175828-28ead50ff1ca/go.mod h1:fwiGnfsIjG7OHPfOvgK7Y/Qo6+2Ox0iozjNTkZICKbY=
+golang.org/x/crypto v0.0.0-20170628150144-84f24dfdf3c4 h1:FBL/lxqdfvq+ustp39HK6a1nNQChKXcm9Lrn2LLJZs4=
+golang.org/x/crypto v0.0.0-20170628150144-84f24dfdf3c4/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
+golang.org/x/net v0.0.0-20170628083913-8663ed5da4fd h1:NJEr3ZwnNvb6H5zhqOJ1Fhilqnf9PXy3JCP9pYb6IFs=
+golang.org/x/net v0.0.0-20170628083913-8663ed5da4fd/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/time v0.0.0-20170424234030-8be79e1e0910 h1:bCMaBn7ph495H+x72gEvgcv+mDRd9dElbzo/mVCMxX4=
+golang.org/x/time v0.0.0-20170424234030-8be79e1e0910/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
+gopkg.in/square/go-jose.v1 v1.1.0 h1:T/KcERvxOFKL2QzwvOsP0l5xRvvhTlwcTxw5qad61pQ=
+gopkg.in/square/go-jose.v1 v1.1.0/go.mod h1:QpYS+a4WhS+DTlyQIi6Ka7MS3SuR9a055rgXNEe6EiA=
